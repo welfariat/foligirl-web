@@ -1,0 +1,51 @@
+#!/usr/bin/python3
+
+import subprocess, re, cgi
+from datetime import datetime, timedelta
+
+print('Content-Type: text/plain; charset=utf-8')
+#print('Access-Control-Allow-Origin: *')
+print('X-Robots-Tag: noindex')
+print('')
+
+params = cgi.FieldStorage()
+pics = '50'
+tagn = ''
+days = '0'
+for pname in params.keys():
+	if pname == 'c':
+		pics = params[pname].value
+	if pname == 't':
+		tagn = params[pname].value
+	if pname == 'd':
+		days = params[pname].value
+
+def findpaths(days):
+	if (len(tagn) > 0):
+		files = subprocess.Popen(('find', '/data/images/', '-type', 'f'), stdout=subprocess.PIPE)
+		grep = subprocess.Popen(('grep', '-F', '[' + tagn + ']'), stdin=files.stdout, stdout=subprocess.PIPE)
+		paths = subprocess.check_output(('shuf', '-n', pics), stdin=grep.stdout)
+	else:
+		if (days == 'all'):
+			files = subprocess.Popen(('find', '/data/images/', '-type', 'f'), stdout=subprocess.PIPE)
+		elif (days == 'none' or days == 'n'):
+			files = subprocess.Popen(('find', '/data/images/', '-type', 'f', '!', '-name', '20*'), stdout=subprocess.PIPE)
+		elif (len(days) <= 8 and len(days) >= 4 and days.isnumeric()):
+			files = subprocess.Popen(('find', '/data/images/', '-type', 'f', '-name', days+'*'), stdout=subprocess.PIPE)
+		else: # number of days to be fetched
+			today = datetime.today()
+			cmdline = ['find', '/data/images/', '-type', 'f', '-name', today.strftime('%Y%m%d') + '*', '-or']
+			for d in range(int(days),0,-1):
+				today = today - timedelta(days=1);
+				cmdline.extend(('-name', today.strftime('%Y%m%d') + '*', '-or'))
+			cmdline.pop() # remove last '-or'
+			files = subprocess.Popen(cmdline, stdout=subprocess.PIPE)
+		paths = subprocess.check_output(('shuf', '-n', pics), stdin=files.stdout)
+	files.wait()
+	return paths.decode('utf-8').split('\n')
+
+ptn = re.compile('/([^/#@]+)([^/]*)\.[^/]+$')
+for fn in findpaths(days):
+	url = fn[12:]
+	if (len(url)>0):
+		print(url)

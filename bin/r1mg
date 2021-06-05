@@ -1,0 +1,24 @@
+#!/usr/bin/python3
+
+import subprocess, sys, os, shutil, urllib.parse
+
+
+files = subprocess.Popen(('find', '/data/images/', '-type', 'f', '-name', '*.jpg', '-or', '-name', '*.jpeg'), stdout=subprocess.PIPE)
+paths = subprocess.check_output(('shuf', '-n', '1'), stdin=files.stdout)
+files.wait()
+
+for fn in paths.decode('utf-8').split('\n'):
+	if (len(fn)>0):
+		sys.stdout.buffer.write(b"Content-Type: image/jpeg\n")
+		sys.stdout.buffer.write(b"Content-Length: ")
+		sys.stdout.buffer.write(str.encode(str(os.stat(fn).st_size)))
+		sys.stdout.buffer.write(b"\n")
+		sys.stdout.buffer.write(b"X-Foli-Real-Path: ")
+		sys.stdout.buffer.write(str.encode(urllib.parse.quote(fn[12:])))
+		sys.stdout.buffer.write(b"\n")
+		sys.stdout.buffer.write(b"\n")
+		sys.stdout.flush
+		# sys.stdout.buffer.write(open(fn, "rb").read())
+		with open(fn, 'rb') as f:
+			shutil.copyfileobj(f, sys.stdout.buffer)
+		sys.exit()
