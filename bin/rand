@@ -1,15 +1,20 @@
 #!/usr/bin/python3
 
-import subprocess, re, cgi
+import configparser, subprocess, re, cgi
 from datetime import datetime, timedelta
 
 print('Content-Type: text/plain; charset=utf-8')
 print('')
 
+conf = configparser.RawConfigParser()
+conf.read('foli.properties')
+imageBase = dict(conf.items('base'))['image.local']
+
 params = cgi.FieldStorage()
-pics = '30'
+paramDefs = dict(conf.items('param.default'))
+pics = paramDefs['pictures']
 tagn = ''
-days = '1'
+days = paramDefs['days']
 for pname in params.keys():
 	if pname == 'c':
 		pics = params[pname].value
@@ -20,19 +25,19 @@ for pname in params.keys():
 
 def findpaths(days):
 	if (len(tagn) > 0):
-		files = subprocess.Popen(('find', '/data/images/', '-type', 'f'), stdout=subprocess.PIPE)
+		files = subprocess.Popen(('find', imageBase, '-type', 'f'), stdout=subprocess.PIPE)
 		grep = subprocess.Popen(('grep', '-F', '[' + tagn + ']'), stdin=files.stdout, stdout=subprocess.PIPE)
 		paths = subprocess.check_output(('shuf', '-n', pics), stdin=grep.stdout)
 	else:
 		if (days[:1] == 'a'):
-			files = subprocess.Popen(('find', '/data/images/', '-type', 'f'), stdout=subprocess.PIPE)
+			files = subprocess.Popen(('find', imageBase, '-type', 'f'), stdout=subprocess.PIPE)
 		elif (days[:1] == 'n'):
-			files = subprocess.Popen(('find', '/data/images/', '-type', 'f', '!', '-name', '20*'), stdout=subprocess.PIPE)
+			files = subprocess.Popen(('find', imageBase, '-type', 'f', '!', '-name', '20*'), stdout=subprocess.PIPE)
 		elif (len(days) <= 8 and len(days) >= 4 and days.isnumeric()):
-			files = subprocess.Popen(('find', '/data/images/', '-type', 'f', '-name', days+'*'), stdout=subprocess.PIPE)
+			files = subprocess.Popen(('find', imageBase, '-type', 'f', '-name', days+'*'), stdout=subprocess.PIPE)
 		else: # number of days to be fetched
 			today = datetime.today()
-			cmdline = ['find', '/data/images/', '-type', 'f', '-name', today.strftime('%Y%m%d') + '*', '-or']
+			cmdline = ['find', imageBase, '-type', 'f', '-name', today.strftime('%Y%m%d') + '*', '-or']
 			for d in range(int(days),0,-1):
 				today = today - timedelta(days=1);
 				cmdline.extend(('-name', today.strftime('%Y%m%d') + '*', '-or'))

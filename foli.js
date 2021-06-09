@@ -93,8 +93,8 @@ class Foli {
 			}
 		});
 		if (this.checkingDelay > 1000) window.setTimeout(()=>{
-			if (this.checkAllAD()) console.debug('ad loaded successfully.');
-			else console.debug('ad loaded failed, content removed.');
+			if (this.checkAllAD()) console.debug('ad checked successfully.');
+			else console.debug('ad checked failed, content removed.');
 		}, this.checkingDelay);
 	}
 	parsePath(path) {
@@ -184,10 +184,19 @@ class Foli {
 					adloaded = true;
 			if (!adloaded) this.loadAD(fig, 999);
 			this.loading = false;
-			if (lines.length < parseInt(this.pics || 30)) { // not enough
-				this.days = (!this.days) ? '1': 'a'; // if today, set yesterday; if other filter, fetch all image
-				if (lines.length == 0) this.loadPics();
+			let daytags = $('#head-tags').find('.head-day');
+			daytags.removeClass('head-day-curr');
+			switch (this.days || '0') {
+				case 'a': $(daytags[0]).addClass('head-day-curr'); break;
+				case '0': $(daytags[1]).addClass('head-day-curr'); break;
+				case '1': $(daytags[2]).addClass('head-day-curr'); break;
+				case 'w': $(daytags[3]).addClass('head-day-curr'); break;
+				case 'm': $(daytags[4]).addClass('head-day-curr'); break;
+				case 'y': $(daytags[5]).addClass('head-day-curr'); break;
 			}
+			if (lines.length < parseInt(this.pics || 30))  // not enough
+				this.days = (!this.days) ? '1': 'a'; // if today, set yesterday; if other filter, fetch all image
+			if (lines.length == 0) this.loadPics();
 		});
 	}
 	loadAD(fig, lastad) {

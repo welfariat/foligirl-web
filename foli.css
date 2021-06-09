@@ -143,9 +143,14 @@ video {
 	padding: 3px;
 }
 #head-tags a.head-tag {
-    color: greenyellow;
-    border: 1px solid greenyellow;
-    background: purple;
+	color: greenyellow;
+	border: 1px solid greenyellow;
+	background: purple;
+}
+#head-tags a.head-day-curr {
+	background-color: silver;
+	color: darkslateblue;
+	border: darkred 1px solid;
 }
 a#usc2257 {
 	display: block;
